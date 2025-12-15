@@ -4,12 +4,12 @@ import paho.mqtt.client as mqtt
 import firebase_admin
 from firebase_admin import credentials, db
 
-# ====== CONFIG ======
+#Config
 MQTT_BROKER = "localhost"      # Mosquitto running on the Pi
 MQTT_PORT = 1883
 
 TELEMETRY_TOPIC = "plant/esp32_01/telemetry"
-STATUS_TOPIC    = "plant/esp32_01/status"     # optional
+STATUS_TOPIC    = "plant/esp32_01/status"     
 
 SERVICE_ACCOUNT_PATH = "serviceAccountKey.json"
 DATABASE_URL = "https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com/"  # <-- CHANGE THIS
@@ -18,7 +18,7 @@ DATABASE_URL = "https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com/"  # <-- CHA
 TELEMETRY_PATH = "/plant/esp32_01/readings"
 STATUS_PATH    = "/plant/esp32_01/status_log"
 
-# ====== INIT FIREBASE ADMIN ======
+#Initialize firebase
 cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
 firebase_admin.initialize_app(cred, {"databaseURL": DATABASE_URL})
 
@@ -49,7 +49,7 @@ def on_message(client, userdata, msg):
     # Add server timestamp (epoch seconds)
     data["server_ts"] = int(time.time())
 
-    # Route based on topic
+    
     if msg.topic == TELEMETRY_TOPIC:
         db.reference(TELEMETRY_PATH).push(data)
         print(f"Wrote telemetry to Firebase: {TELEMETRY_PATH}")
@@ -59,7 +59,6 @@ def on_message(client, userdata, msg):
         print(f"Wrote status to Firebase: {STATUS_PATH}")
 
     else:
-        # Shouldn't happen since we only subscribe to two topics
         print("Skipping: unexpected topic")
 
 def main():
