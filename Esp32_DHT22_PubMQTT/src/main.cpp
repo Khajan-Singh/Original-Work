@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
+#include "secrets.h"
 
 // -------- DHT Sensor --------
 #define DHTPIN 22
@@ -9,12 +10,12 @@
 DHT dht(DHTPIN, DHTTYPE);
 
 // -------- WiFi --------
-const char *ssid = "[SSID]"; // <-- CHANGE THIS
-const char *password = "[PASSWORD]";
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
 
 // -------- MQTT --------
-const char *mqtt_broker = "[IP]";     // Raspberry Pi IP <-- CHANGE THIS
-const int mqtt_port = 1883;
+const char *mqtt_broker = MQTT_BROKER_IP;
+const int mqtt_port = MQTT_PORT;
 
 // Topics (more realistic/scalable than "app/temp")
 const char *device_id = "esp32_01";
