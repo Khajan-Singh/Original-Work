@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Plant Telemetry Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: system-ui, Arial; margin: 20px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px 14px; min-width: 220px; }
+    .label { color: #666; font-size: 13px; }
+    .value { font-size: 22px; font-weight: 700; margin-top: 6px; }
+    canvas { border: 1px solid #eee; border-radius: 12px; padding: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Plant Telemetry Dashboard (esp32_01)</h2>
+
+  <div class="row">
+    <div class="card"><div class="label">Humidity</div><div class="value" id="hum">--</div></div>
+    <div class="card"><div class="label">Temperature (°C)</div><div class="value" id="tc">--</div></div>
+    <div class="card"><div class="label">Heat Index (°C)</div><div class="value" id="hic">--</div></div>
+    <div class="card"><div class="label">Last Update</div><div class="value" id="ts" style="font-size:16px">--</div></div>
+  </div>
+
+  <canvas id="chart" height="120"></canvas>
+
+  <script>
+    // ✅ CHANGE THIS to your DB URL (must end with /)
+    const DB = "https://originalwork-b025c-default-rtdb.firebaseio.com/";
+
+    // Path where your Pi script pushes telemetry
+    const PATH = "plant/esp32_01/readings";
+
+    // How many points to fetch each refresh
+    const LIMIT = 80;
+
+    // Refresh interval (ms)
+    const REFRESH = 3000;
+
+async function fetchReadings() {
+  const orderBy = encodeURIComponent('"server_ts"'); // <-- important
+  const url = `${DB}${PATH}.json?orderBy=${orderBy}&limitToLast=${LIMIT}`;
+
+  const res = await fetch(url);
+  const text = await res.text();
+
+  if (!res.ok) {
+    console.error("Firebase error", res.status, text);
+    return [];
+  }
+
+  const obj = JSON.parse(text);
+  if (!obj) return [];
+
+  return Object.values(obj)
+    .filter(x => x && typeof x === "object" && x.server_ts)
+    .sort((a, b) => a.server_ts - b.server_ts);
+}
+
+    const ctx = document.getElementById("chart").getContext("2d");
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Humidity (%)", data: [] },
+          { label: "Temp (°C)", data: [] },
+          { label: "Heat Index (°C)", data: [] },
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: { title: { display: true, text: "Time" } },
+          y: { title: { display: true, text: "Value" } }
+        }
+      }
+    });
+
+    function fmtTime(epochSeconds) {
+      const d = new Date(epochSeconds * 1000);
+      return d.toLocaleTimeString();
+    }
+
+    async function refresh() {
+      const data = await fetchReadings();
+      if (data.length === 0) return;
+
+      const latest = data[data.length - 1];
+      document.getElementById("hum").textContent = (latest.humidity ?? "--").toFixed?.(2) ?? latest.humidity;
+      document.getElementById("tc").textContent = (latest.temp_c ?? "--").toFixed?.(2) ?? latest.temp_c;
+      document.getElementById("hic").textContent = (latest.heat_index_c ?? "--").toFixed?.(2) ?? latest.heat_index_c;
+      document.getElementById("ts").textContent = fmtTime(latest.server_ts);
+
+      chart.data.labels = data.map(d => fmtTime(d.server_ts));
+      chart.data.datasets[0].data = data.map(d => d.humidity);
+      chart.data.datasets[1].data = data.map(d => d.temp_c);
+      chart.data.datasets[2].data = data.map(d => d.heat_index_c);
+      chart.update();
+    }
+
+    refresh();
+    setInterval(refresh, REFRESH);
+  </script>
+</body>
+</html>
