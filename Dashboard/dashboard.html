@@ -6,18 +6,53 @@
   <meta charset="utf-8" />
   <title>Plant Telemetry Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { font-family: system-ui, Arial; margin: 20px; }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Helvetica, Arial, sans-serif;
+      margin: 20px;
+    }
+
     .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px 14px; min-width: 220px; }
-    .label { color: #666; font-size: 13px; }
-    .value { font-size: 22px; font-weight: 700; margin-top: 6px; }
-    canvas { border: 1px solid #eee; border-radius: 12px; padding: 12px; }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 12px 14px;
+      min-width: 220px;
+    }
+
+    .label {
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .value {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    canvas {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 12px;
+    }
   </style>
 </head>
+
 <body>
-  <h2>Plant Telemetry Dashboard (esp32_01)</h2>
+  <h2>Plant Telemetry Dashboard</h2>
 
   <div class="row">
     <div class="card"><div class="label">Humidity</div><div class="value" id="hum">--</div></div>
@@ -32,32 +67,28 @@
     const DB = window.APP_CONFIG.FIREBASE_DB_URL;
     const PATH = `plant/${window.APP_CONFIG.DEVICE_ID}/readings`;
 
-
-    // How many points to fetch each refresh
     const LIMIT = 80;
-
-    // Refresh interval (ms)
     const REFRESH = 3000;
 
-async function fetchReadings() {
-  const orderBy = encodeURIComponent('"server_ts"'); // <-- important
-  const url = `${DB}${PATH}.json?orderBy=${orderBy}&limitToLast=${LIMIT}`;
+    async function fetchReadings() {
+      const orderBy = encodeURIComponent('"server_ts"');
+      const url = `${DB}${PATH}.json?orderBy=${orderBy}&limitToLast=${LIMIT}`;
 
-  const res = await fetch(url);
-  const text = await res.text();
+      const res = await fetch(url);
+      const text = await res.text();
 
-  if (!res.ok) {
-    console.error("Firebase error", res.status, text);
-    return [];
-  }
+      if (!res.ok) {
+        console.error("Firebase error", res.status, text);
+        return [];
+      }
 
-  const obj = JSON.parse(text);
-  if (!obj) return [];
+      const obj = JSON.parse(text);
+      if (!obj) return [];
 
-  return Object.values(obj)
-    .filter(x => x && typeof x === "object" && x.server_ts)
-    .sort((a, b) => a.server_ts - b.server_ts);
-}
+      return Object.values(obj)
+        .filter(x => x && typeof x === "object" && x.server_ts)
+        .sort((a, b) => a.server_ts - b.server_ts);
+    }
 
     const ctx = document.getElementById("chart").getContext("2d");
     const chart = new Chart(ctx, {
