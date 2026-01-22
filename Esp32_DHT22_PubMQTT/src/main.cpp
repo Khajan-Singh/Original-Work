@@ -26,7 +26,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // Publish interval
-const unsigned long PUBLISH_MS = 3000;
+const unsigned long PUBLISH_MS = 10000;
 unsigned long lastPublish = 0;
 
 // -------- Optional: handle incoming commands --------
