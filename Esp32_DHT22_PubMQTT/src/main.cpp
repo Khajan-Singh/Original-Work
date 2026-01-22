@@ -3,16 +3,16 @@
 #include <PubSubClient.h>
 #include <DHT.h>
 
-// ========= DHT Sensor =========
+// -------- DHT Sensor --------
 #define DHTPIN 22
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-// ========= WiFi =========
+// -------- WiFi --------
 const char *ssid = "[SSID]"; // <-- CHANGE THIS
 const char *password = "[PASSWORD]";
 
-// ========= MQTT =========
+// -------- MQTT --------
 const char *mqtt_broker = "[IP]";     // Raspberry Pi IP <-- CHANGE THIS
 const int mqtt_port = 1883;
 
@@ -28,7 +28,7 @@ PubSubClient client(espClient);
 const unsigned long PUBLISH_MS = 3000;
 unsigned long lastPublish = 0;
 
-// -------- Optional: handle incoming commands (not required tonight) --------
+// -------- Optional: handle incoming commands --------
 void callback(char *topic, byte *payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -55,7 +55,7 @@ void connectWiFi() {
   Serial.println(WiFi.localIP());
 }
 
-// -------- Connect MQTT --------
+// -------- Connect MQTT
 void connectMQTT() {
   client.setServer(mqtt_broker, mqtt_port);
   client.setCallback(callback);
@@ -71,7 +71,7 @@ void connectMQTT() {
       // Publish status once on connect
       String status = String("{\"device_id\":\"") + device_id +
                       String("\",\"status\":\"online\"}");
-      client.publish(status_topic, status.c_str(), true); // retained
+      client.publish(status_topic, status.c_str(), true);
     } else {
       Serial.print("MQTT failed, state=");
       Serial.println(client.state());
@@ -114,7 +114,6 @@ void loop() {
     float hiC = dht.computeHeatIndex(tC, h, false);  // Heat index C
 
     // Build JSON payload
-    // ts_ms is fine for tonight; your Pi can add real timestamps later.
     char payload[256];
     snprintf(payload, sizeof(payload),
              "{\"device_id\":\"%s\",\"ts_ms\":%lu,"
