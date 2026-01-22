@@ -1,5 +1,7 @@
 <!doctype html>
 <html>
+<script src="config.js"></script>
+
 <head>
   <meta charset="utf-8" />
   <title>Plant Telemetry Dashboard</title>
@@ -27,11 +29,9 @@
   <canvas id="chart" height="120"></canvas>
 
   <script>
-    // ✅ CHANGE THIS to your DB URL (must end with /)
-    const DB = "https://originalwork-b025c-default-rtdb.firebaseio.com/";
+    const DB = window.APP_CONFIG.FIREBASE_DB_URL;
+    const PATH = `plant/${window.APP_CONFIG.DEVICE_ID}/readings`;
 
-    // Path where your Pi script pushes telemetry
-    const PATH = "plant/esp32_01/readings";
 
     // How many points to fetch each refresh
     const LIMIT = 80;
